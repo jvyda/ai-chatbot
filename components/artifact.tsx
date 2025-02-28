@@ -30,6 +30,8 @@ import { imageArtifact } from '@/artifacts/image/client';
 import { codeArtifact } from '@/artifacts/code/client';
 import { sheetArtifact } from '@/artifacts/sheet/client';
 import { textArtifact } from '@/artifacts/text/client';
+import { imagePromptArtifact } from '@/artifacts/imageprompt/client';
+
 import equal from 'fast-deep-equal';
 
 export const artifactDefinitions = [
@@ -37,6 +39,7 @@ export const artifactDefinitions = [
   codeArtifact,
   imageArtifact,
   sheetArtifact,
+  imagePromptArtifact
 ];
 export type ArtifactKind = (typeof artifactDefinitions)[number]['kind'];
 
@@ -57,6 +60,8 @@ export interface UIArtifact {
 
 function PureArtifact({
   chatId,
+  userId,
+  systemPromptId,
   input,
   setInput,
   handleSubmit,
@@ -72,6 +77,8 @@ function PureArtifact({
   isReadonly,
 }: {
   chatId: string;
+  userId: string;
+  systemPromptId: string;
   input: string;
   setInput: (input: string) => void;
   isLoading: boolean;
@@ -247,7 +254,7 @@ function PureArtifact({
   const isMobile = windowWidth ? windowWidth < 768 : false;
 
   const artifactDefinition = artifactDefinitions.find(
-    (definition) => definition.kind === artifact.kind,
+    (definition) => definition.kind === artifact.kind
   );
 
   if (!artifactDefinition) {
@@ -337,6 +344,7 @@ function PureArtifact({
                 <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
                   <MultimodalInput
                     chatId={chatId}
+                    userId={userId}
                     input={input}
                     setInput={setInput}
                     handleSubmit={handleSubmit}

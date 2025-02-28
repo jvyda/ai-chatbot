@@ -20,18 +20,45 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import { Button } from "@/components/ui/button"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 import { sanitizeUIMessages } from '@/lib/utils';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
-import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
+import { getSystemPrompts } from "@/app/actions/system-prompts"
+import { SystemPromptPicker } from './system-prompt-picker';
+
+type SystemPrompt = {
+  id: string
+  name: string
+  prompt: string
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+}
 
 function PureMultimodalInput({
   chatId,
+  userId,
   input,
   setInput,
   isLoading,
@@ -43,8 +70,10 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
+  onSelectedSystemPrompt
 }: {
   chatId: string;
+  userId: string;
   input: string;
   setInput: (value: string) => void;
   isLoading: boolean;
@@ -64,6 +93,7 @@ function PureMultimodalInput({
     chatRequestOptions?: ChatRequestOptions,
   ) => void;
   className?: string;
+  onSelectedSystemPrompt: (prompt: SystemPrompt) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -193,14 +223,35 @@ function PureMultimodalInput({
     [setAttachments],
   );
 
+  const [systemPrompts, setSystemPrompts] = useState<SystemPrompt[]>([])
+  const [selectedPrompt, setSelectedPrompt] = useState<SystemPrompt>()
+
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      const prompts = await getSystemPrompts(userId)
+      setSystemPrompts(prompts)
+    }
+    fetchPrompts()
+  }, [userId])
+
   return (
-    <div className="relative w-full flex flex-col gap-4">
+    <div className="relative w-full flex flex-col">
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions append={append} chatId={chatId} />
-        )}
+          <div className='flex flex-row justify-start w-fit'>
+          <SystemPromptPicker 
+        systemPrompts={systemPrompts}
+        selectedPrompt={selectedPrompt}
+        onPromptChange={(prompt) => {
 
+          setSelectedPrompt(prompt)
+          onSelectedSystemPrompt(prompt)
+        }}
+      />
+      </div>
+        )}
+      
       <input
         type="file"
         className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"

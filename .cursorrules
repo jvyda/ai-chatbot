@@ -1,0 +1,13 @@
+use shadcn for ui
+use lucide for icons
+use vercel ai for ai
+use drizzle for db
+use nextjs 14
+use typescript
+use tailwind css
+always refer to ./lib/db/schema.ts for the db schema
+always refer to ./lib/db/queries.ts for the db queries
+
+do not use import { db } from '@/lib/db'; for db queries, use the queries file instead
+
+shadcn uses this format for components:npx shadcn@latest add button instead of npx shadcn-ui@latest add button

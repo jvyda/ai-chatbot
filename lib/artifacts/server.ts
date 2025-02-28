@@ -2,6 +2,9 @@ import { codeDocumentHandler } from '@/artifacts/code/server';
 import { imageDocumentHandler } from '@/artifacts/image/server';
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
 import { textDocumentHandler } from '@/artifacts/text/server';
+import { imagePromtDocumentHandler } from '@/artifacts/imageprompt/server';
+
+
 import { ArtifactKind } from '@/components/artifact';
 import { DataStreamWriter } from 'ai';
 import { Document } from '../db/schema';
@@ -14,6 +17,7 @@ export interface SaveDocumentProps {
   kind: ArtifactKind;
   content: string;
   userId: string;
+  systemPromptId?: string;
 }
 
 export interface CreateDocumentCallbackProps {
@@ -21,6 +25,7 @@ export interface CreateDocumentCallbackProps {
   title: string;
   dataStream: DataStreamWriter;
   session: Session;
+  systemPromptId?: string;
 }
 
 export interface UpdateDocumentCallbackProps {
@@ -49,6 +54,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         title: args.title,
         dataStream: args.dataStream,
         session: args.session,
+        systemPromptId: args.systemPromptId
       });
 
       if (args.session?.user?.id) {
@@ -58,6 +64,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
           content: draftContent,
           kind: config.kind,
           userId: args.session.user.id,
+          systemPromptId: args.systemPromptId
         });
       }
 
@@ -94,6 +101,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   codeDocumentHandler,
   imageDocumentHandler,
   sheetDocumentHandler,
+  imagePromtDocumentHandler
 ];
 
-export const artifactKinds = ['text', 'code', 'image', 'sheet'] as const;
+export const artifactKinds = ['text', 'code', 'image', 'sheet', 'imageprompt'] as const;

@@ -30,8 +30,14 @@ function PureMessages({
   reload,
   isReadonly,
 }: MessagesProps) {
-  const [messagesContainerRef, messagesEndRef] =
-    useScrollToBottom<HTMLDivElement>();
+  const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>({
+    // Add a condition to skip scrolling when in edit mode
+    shouldScroll: (prevMessages, newMessages) => {
+      // Check if we're in edit mode
+      const isEditing = newMessages.some(msg => msg.mode === 'edit');
+      return !isEditing;
+    }
+  });
 
   return (
     <div

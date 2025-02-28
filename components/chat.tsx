@@ -2,6 +2,7 @@
 
 import type { Attachment, Message } from 'ai';
 import { useChat } from 'ai/react';
+// import { useChat } from '@ai-sdk/react'
 import { useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 
@@ -16,14 +17,25 @@ import { VisibilityType } from './visibility-selector';
 import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
 
+interface SystemPrompt {
+  id: string
+  name: string
+  prompt: string
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export function Chat({
   id,
+  userId,
   initialMessages,
   selectedChatModel,
   selectedVisibilityType,
   isReadonly,
 }: {
   id: string;
+  userId: string;
   initialMessages: Array<Message>;
   selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
@@ -31,6 +43,7 @@ export function Chat({
 }) {
   const { mutate } = useSWRConfig();
 
+  const [selectedSystemPrompt, setSelectedSystemPrompt] = useState<SystemPrompt>();
   const {
     messages,
     setMessages,
@@ -43,7 +56,7 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, selectedChatModel: selectedChatModel },
+    body: { id, selectedChatModel: selectedChatModel,selectedSystemPrompt: selectedSystemPrompt },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,
@@ -55,7 +68,6 @@ export function Chat({
       toast.error('An error occured, please try again!');
     },
   });
-
   const { data: votes } = useSWR<Array<Vote>>(
     `/api/vote?chatId=${id}`,
     fetcher,
@@ -63,7 +75,6 @@ export function Chat({
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
-
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
@@ -88,6 +99,7 @@ export function Chat({
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
           {!isReadonly && (
             <MultimodalInput
+              userId={userId}
               chatId={id}
               input={input}
               setInput={setInput}
@@ -99,6 +111,7 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
+              onSelectedSystemPrompt={setSelectedSystemPrompt}
             />
           )}
         </form>
@@ -106,6 +119,8 @@ export function Chat({
 
       <Artifact
         chatId={id}
+        userId={userId}
+        systemPromptId={selectedSystemPrompt?.id ?? ''}
         input={input}
         setInput={setInput}
         handleSubmit={handleSubmit}

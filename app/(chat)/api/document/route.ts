@@ -53,7 +53,8 @@ export async function POST(request: Request) {
     content,
     title,
     kind,
-  }: { content: string; title: string; kind: ArtifactKind } =
+    systemPromptId,
+  }: { content: string; title: string; kind: ArtifactKind,systemPromptId?: string;} =
     await request.json();
 
   if (session.user?.id) {
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
       title,
       kind,
       userId: session.user.id,
+      systemPromptId
     });
 
     return Response.json(document, { status: 200 });

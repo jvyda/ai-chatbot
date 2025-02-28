@@ -11,6 +11,7 @@ import { systemPrompt } from '@/lib/ai/prompts';
 import {
   deleteChatById,
   getChatById,
+  getSystemPromptById,
   saveChat,
   saveMessages,
 } from '@/lib/db/queries';
@@ -33,11 +34,18 @@ export async function POST(request: Request) {
     id,
     messages,
     selectedChatModel,
-  }: { id: string; messages: Array<Message>; selectedChatModel: string } =
+    selectedSystemPrompt
+  }: { id: string; messages: Array<Message>; selectedChatModel: string, selectedSystemPrompt: any } =
     await request.json();
+    let personaSystemPrompt = null
+if(selectedSystemPrompt?.id){
+   const getSystemPrompt = await getSystemPromptById({ id: selectedSystemPrompt.id });
+   personaSystemPrompt = getSystemPrompt[0].prompt
+}else{
+  personaSystemPrompt = systemPrompt({ selectedChatModel })
+}
 
   const session = await auth();
-
   if (!session || !session.user || !session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
@@ -52,7 +60,7 @@ export async function POST(request: Request) {
 
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
-    await saveChat({ id, userId: session.user.id, title });
+    await saveChat({ id, userId: session.user.id, title, systemPromptId: selectedSystemPrompt?.id });
   }
 
   await saveMessages({
@@ -63,7 +71,7 @@ export async function POST(request: Request) {
     execute: (dataStream) => {
       const result = streamText({
         model: myProvider.languageModel(selectedChatModel),
-        system: systemPrompt({ selectedChatModel }),
+        system: personaSystemPrompt,
         messages,
         maxSteps: 5,
         experimental_activeTools:
